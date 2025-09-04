@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RescuePulse - Disaster Response Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚨</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top right, #0a0a14 0%, #000 70%); color: #f0f0f5; overflow: hidden; }
+    .glass { background: rgba(20,20,30,0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,.3); }
+    .legend { padding: 10px 12px; font: 12px/1.5 'Inter', sans-serif; background: rgba(20,20,30,.8); border-radius: 10px; color:#a0a0b0; border: 1px solid rgba(255,255,255,.1) }
+    .legend i { width:18px; height:18px; float:left; margin-right:8px; border-radius:50%; opacity:.9 }
+    ::-webkit-scrollbar { width: 8px } ::-webkit-scrollbar-thumb { background:#2d3748; border-radius:4px }
+  </style>
+</head>
+<body>
+  <div class="flex h-screen">
+    <aside id="sidebar" class="w-64 bg-[#14141e] p-6 flex flex-col fixed md:relative h-full z-30 -translate-x-full md:translate-x-0 border-r border-white/10">
+      <div class="flex items-center gap-3 mb-10">
+        <div class="bg-rose-500/20 p-3 rounded-xl">🚨</div>
+        <div><h1 class="text-2xl font-bold">RescuePulse</h1><p class="text-xs text-white/60">Disaster Response Dashboard</p></div>
+      </div>
+      <div class="mb-8 p-4 glass"><p class="text-xs text-white/60">Logged in as</p><p id="loggedUser" class="font-medium">User</p></div>
+      <nav class="flex-grow">
+        <a class="block p-3 rounded-xl bg-sky-400/10 text-sky-400 font-semibold" href="#">Dashboard</a>
+      </nav>
+      <a id="logout" href="#" class="mt-auto block p-3 rounded-xl text-rose-400 hover:bg-rose-400/10">Logout</a>
+    </aside>
+    <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+      <header class="px-4 py-3 flex justify-between items-center border-b border-white/10 bg-black/30">
+        <button id="burger" class="md:hidden">☰</button>
+        <h2 class="text-lg font-bold hidden md:block">Disaster Response Dashboard</h2>
+        <span id="clock" class="font-mono text-sm text-white/70"></span>
+      </header>
+      <main class="grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
+        <section class="lg:col-span-2 flex flex-col gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="glass p-5"><p class="text-white/60 text-sm">Active Alerts</p><p id="kpi-active" class="text-3xl font-bold text-rose-400 mt-2">0</p></div>
+            <div class="glass p-5"><p class="text-white/60 text-sm">Highest Risk</p><p id="kpi-high" class="text-2xl font-bold mt-2">-</p></div>
+            <div class="glass p-5"><p class="text-white/60 text-sm">Response Teams</p><p class="text-3xl font-bold mt-2">12</p></div>
+          </div>
+          <div class="relative glass h-96 rounded-2xl overflow-hidden"><div id="map" class="h-full w-full"></div></div>
+        </section>
+        <section class="glass p-6">
+          <h3 class="text-lg font-bold mb-4">Risk Prediction</h3>
+          <form id="form" class="space-y-4">
+            <div><label class="text-sm text-white/70">Location</label><input id="loc" class="w-full p-3 rounded bg-[#14141e] border border-white/10" placeholder="Ampara" required></div>
+            <div class="grid grid-cols-2 gap-4">
+              <div><label class="text-sm text-white/70">Temperature (°C)</label><input id="t" type="number" step="0.1" class="w-full p-3 rounded bg-[#14141e] border border-white/10" placeholder="30.5" required></div>
+              <div><label class="text-sm text-white/70">Humidity (%)</label><input id="h" type="number" step="0.1" class="w-full p-3 rounded bg-[#14141e] border border-white/10" placeholder="85.2" required></div>
+            </div>
+            <div><label class="text-sm text-white/70">Wind Speed (m/s)</label><input id="w" type="number" step="0.1" class="w-full p-3 rounded bg-[#14141e] border border-white/10" placeholder="12.3" required></div>
+            <button class="w-full py-3 rounded-xl text-white bg-gradient-to-r from-orange-400 to-rose-500">Run Prediction</button>
+            <div class="text-sm text-white/70">Risk score: <span id="score">n/a</span> • Level: <span id="level">-</span></div>
+          </form>
+          <div class="mt-6"><h4 class="font-semibold mb-2">Recent Alerts</h4><table class="w-full text-sm"><thead><tr class="text-white/60 border-b border-white/10"><th class="py-2 text-left">Location</th><th class="py-2 text-left">Risk</th><th class="py-2 text-left">Score</th></tr></thead><tbody id="alerts"></tbody></table></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const cities = { Ampara:[7.3000,81.6660], Colombo:[6.9271,79.8612], Kandy:[7.2906,80.6337], Galle:[6.0535,80.2210], Jaffna:[9.6615,80.0255], Anuradhapura:[8.3114,80.4037], Trincomalee:[8.5922,81.2350], Matara:[5.9483,80.5353], Ratnapura:[6.6806,80.3997], Batticaloa:[7.7170,81.7000], Kurunegala:[7.4863,80.3647], Badulla:[6.9895,81.0550] };
+    const riskInfo = s => { const v=Number(s||0); return v>=0.7?{l:'High',c:'#f43f5e'}:v>=0.4?{l:'Medium',c:'#fb923c'}:{l:'Low',c:'#38bdf8'} };
+    const icon = c => L.divIcon({ html:`<div class='w-4 h-4 rounded-full' style='background:${c};box-shadow:0 0 12px ${c}'></div>`, className:'', iconSize:[16,16], iconAnchor:[8,8] });
+    function tick(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) }
+    setInterval(tick,1000); tick();
+    const tok = localStorage.getItem('rp_token'); if (tok) { const u=tok.replace('demo-token-',''); document.getElementById('loggedUser').textContent = u; }
+    document.getElementById('burger').onclick = () => document.getElementById('sidebar').classList.toggle('-translate-x-full');
+    document.getElementById('logout').onclick = (e)=>{ e.preventDefault(); localStorage.removeItem('rp_token'); location.href='sign-in.html'; };
+
+    const map = L.map('map',{zoomControl:false}).setView([7.8731,80.7718],7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:20}).addTo(map);
+    L.control.zoom({position:'bottomright'}).addTo(map);
+    const legend = L.control({position:'bottomleft'}); legend.onAdd = () => { const d = L.DomUtil.create('div','legend'); d.innerHTML = '<h4 class="text-xs font-bold mb-2 text-white">RISK LEVEL</h4><div class="flex items-center mb-1"><i style="background:#f43f5e"></i><span class="text-xs">High</span></div><div class="flex items-center mb-1"><i style="background:#fb923c"></i><span class="text-xs">Medium</span></div><div class="flex items-center"><i style="background:#38bdf8"></i><span class="text-xs">Low</span></div>'; return d; }; legend.addTo(map);
+    const dyn = {};
+    const alertsT = document.getElementById('alerts');
+    function pushAlert(loc,score){ const {l,c}=riskInfo(score); const tr=document.createElement('tr'); tr.innerHTML = `<td class='py-2'>${loc}</td><td class='py-2' style='color:${c}'>${l}</td><td class='py-2 text-white/70'>${Number(score).toFixed(2)}</td>`; alertsT.prepend(tr); const k=document.getElementById('kpi-active'); k.textContent = String(Number(k.textContent||'0')+1); document.getElementById('kpi-high').textContent = loc; }
+    async function predict(loc,temp,hum,windMs){ const payload={ rainMm: Math.max(0,(hum/100)*15), windKph: windMs*3.6, tempC: temp, humidityPct: hum, soilSatPct: 50 }; const r=await fetch('/ai/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); return await r.json(); }
+    document.getElementById('form').addEventListener('submit', async (e)=>{ e.preventDefault(); const loc=document.getElementById('loc').value.trim(); const t=parseFloat(document.getElementById('t').value); const h=parseFloat(document.getElementById('h').value); const w=parseFloat(document.getElementById('w').value); try{ const data=await predict(loc,t,h,w); const s=Number(data.riskScore||0); const {l,c}=riskInfo(s); document.getElementById('score').textContent=s.toFixed(2); document.getElementById('level').textContent=l; const coords=cities[loc]; if(coords){ if(dyn[loc]) dyn[loc].setIcon(icon(c)).bindPopup(`${loc}<br/>Risk: <b style='color:${c}'>${l}</b> (${s.toFixed(2)})`).openPopup(); else dyn[loc]=L.marker(coords,{icon:icon(c)}).addTo(map).bindPopup(`${loc}<br/>Risk: <b style='color:${c}'>${l}</b> (${s.toFixed(2)})`).openPopup(); map.flyTo(coords,10); } pushAlert(loc,s); }catch(err){ console.error(err); } });
+  </script>
+</body>
+</html>
+
