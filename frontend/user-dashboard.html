@@ -57,6 +57,21 @@
             <div class="text-sm text-white/70">Risk score: <span id="score">n/a</span> • Level: <span id="level">-</span></div>
           </form>
           <div class="mt-6"><h4 class="font-semibold mb-2">Recent Alerts</h4><table class="w-full text-sm"><thead><tr class="text-white/60 border-b border-white/10"><th class="py-2 text-left">Location</th><th class="py-2 text-left">Risk</th><th class="py-2 text-left">Score</th></tr></thead><tbody id="alerts"></tbody></table></div>
+
+          <div class="mt-6">
+            <h4 class="font-semibold mb-2">Actions</h4>
+            <div id="control-panel" class="grid grid-cols-2 gap-2">
+              <button id="btn-data-stats" class="px-3 py-2 rounded bg-cyan-600/70 hover:bg-cyan-500">Data Stats</button>
+              <button id="btn-data-ingest" class="px-3 py-2 rounded bg-cyan-600/70 hover:bg-cyan-500">Ingest Sample</button>
+              <button id="btn-ai-predict" class="px-3 py-2 rounded bg-emerald-600/70 hover:bg-emerald-500">AI Predict</button>
+              <button id="btn-analytics-sum" class="px-3 py-2 rounded bg-emerald-600/70 hover:bg-emerald-500">Analytics Summarize</button>
+              <button id="btn-incident-create" class="px-3 py-2 rounded bg-orange-600/70 hover:bg-orange-500">Incident Create</button>
+              <button id="btn-incident-list" class="px-3 py-2 rounded bg-orange-600/70 hover:bg-orange-500">Incident List</button>
+              <button id="btn-notify-publish" class="px-3 py-2 rounded bg-fuchsia-600/70 hover:bg-fuchsia-500">Notify Publish</button>
+              <button id="btn-notify-list" class="px-3 py-2 rounded bg-fuchsia-600/70 hover:bg-fuchsia-500">Notify List</button>
+            </div>
+            <div id="control-output" class="mt-3 bg-black/40 text-xs p-2 rounded max-h-64 overflow-auto"></div>
+          </div>
         </section>
       </main>
     </div>
@@ -82,6 +97,7 @@
     async function predict(loc,temp,hum,windMs){ const payload={ rainMm: Math.max(0,(hum/100)*15), windKph: windMs*3.6, tempC: temp, humidityPct: hum, soilSatPct: 50 }; const r=await fetch('/ai/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); return await r.json(); }
     document.getElementById('form').addEventListener('submit', async (e)=>{ e.preventDefault(); const loc=document.getElementById('loc').value.trim(); const t=parseFloat(document.getElementById('t').value); const h=parseFloat(document.getElementById('h').value); const w=parseFloat(document.getElementById('w').value); try{ const data=await predict(loc,t,h,w); const s=Number(data.riskScore||0); const {l,c}=riskInfo(s); document.getElementById('score').textContent=s.toFixed(2); document.getElementById('level').textContent=l; const coords=cities[loc]; if(coords){ if(dyn[loc]) dyn[loc].setIcon(icon(c)).bindPopup(`${loc}<br/>Risk: <b style='color:${c}'>${l}</b> (${s.toFixed(2)})`).openPopup(); else dyn[loc]=L.marker(coords,{icon:icon(c)}).addTo(map).bindPopup(`${loc}<br/>Risk: <b style='color:${c}'>${l}</b> (${s.toFixed(2)})`).openPopup(); map.flyTo(coords,10); } pushAlert(loc,s); }catch(err){ console.error(err); } });
   </script>
+  <script src="script.js"></script>
 </body>
 </html>
 

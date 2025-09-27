@@ -1,10 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RescuePulse - Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style> body{ background:#0a0a14; color:#f0f0f5; font-family: Inter, system-ui, sans-serif } .glass{ background:rgba(20,20,30,.7); backdrop-filter: blur(16px); border:1px solid rgba(255,255,255,.1); border-radius:16px } </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+  <script defer src="/script.js"></script>
 </head>
 <body>
-
+  <div class="min-h-screen p-6">
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+      <a href="index.html" class="text-sm text-white/70 hover:text-white">← Back to Home</a>
+    </header>
+    <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section class="glass p-5">
+        <h2 class="font-semibold mb-3">Users</h2>
+        <div class="flex gap-2 mb-2">
+          <button id="btn-admin-users" class="px-3 py-2 rounded bg-slate-600/70 hover:bg-slate-500">Load Users</button>
+        </div>
+        <pre id="admin-users" class="bg-black/40 text-xs p-2 rounded max-h-64 overflow-auto"></pre>
+      </section>
+      <section class="glass p-5">
+        <h2 class="font-semibold mb-3">Logs</h2>
+        <div class="flex gap-2 mb-2">
+          <button id="btn-admin-logs-login" class="px-3 py-2 rounded bg-slate-600/70 hover:bg-slate-500">login.txt</button>
+          <button id="btn-admin-logs-users" class="px-3 py-2 rounded bg-slate-600/70 hover:bg-slate-500">users.txt</button>
+          <button id="btn-admin-logs-inc" class="px-3 py-2 rounded bg-slate-600/70 hover:bg-slate-500">incidents.txt</button>
+        </div>
+        <pre id="admin-logs" class="bg-black/40 text-xs p-2 rounded max-h-64 overflow-auto"></pre>
+      </section>
+    </main>
+  </div>
+  <script>
+    window.addEventListener('DOMContentLoaded', ()=>{
+      const usersOut = document.getElementById('admin-users');
+      const logsOut = document.getElementById('admin-logs');
+      const show = (el, data) => { el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2); };
+      const on = (id, fn, out) => { const el=document.getElementById(id); if (el) el.addEventListener('click', async (e)=>{ e.preventDefault(); try{ const r = await fn(); show(out, r); }catch(err){ show(out, err?.message||String(err)); } }); };
+      on('btn-admin-users', ()=>window.api.admin.users(), usersOut);
+      on('btn-admin-logs-login', ()=>window.api.admin.logs('login.txt'), logsOut);
+      on('btn-admin-logs-users', ()=>window.api.admin.logs('users.txt'), logsOut);
+      on('btn-admin-logs-inc', ()=>window.api.admin.logs('incidents.txt'), logsOut);
+    });
+  </script>
 </body>
 </html>

@@ -19,3 +19,11 @@ sd	FAIL
 hasiru	SUCCESS
 dineth	FAIL
 basura	SUCCESS
+admin02	FAIL
+dineth01	FAIL
+hasiru	SUCCESS
+hasiru	SUCCESS
+hasiru	SUCCESS
+hasiru	SUCCESS
+hasiru	SUCCESS
+hasiru	SUCCESS
