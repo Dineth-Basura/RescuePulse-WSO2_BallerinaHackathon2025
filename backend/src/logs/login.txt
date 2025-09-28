@@ -27,3 +27,5 @@ hasiru	SUCCESS
 hasiru	SUCCESS
 hasiru	SUCCESS
 hasiru	SUCCESS
+hasiru	FAIL
+hasiru	SUCCESS

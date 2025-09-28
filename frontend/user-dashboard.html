@@ -83,7 +83,7 @@
     const icon = c => L.divIcon({ html:`<div class='w-4 h-4 rounded-full' style='background:${c};box-shadow:0 0 12px ${c}'></div>`, className:'', iconSize:[16,16], iconAnchor:[8,8] });
     function tick(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) }
     setInterval(tick,1000); tick();
-    const tok = localStorage.getItem('rp_token'); if (tok) { const u=tok.replace('demo-token-',''); document.getElementById('loggedUser').textContent = u; }
+    const tok = localStorage.getItem('rp_token'); if (tok) { const u=(localStorage.getItem('rp_user')||tok.replace('demo-token-','')); document.getElementById('loggedUser').textContent = u; }
     document.getElementById('burger').onclick = () => document.getElementById('sidebar').classList.toggle('-translate-x-full');
     document.getElementById('logout').onclick = (e)=>{ e.preventDefault(); localStorage.removeItem('rp_token'); location.href='sign-in.html'; };
 

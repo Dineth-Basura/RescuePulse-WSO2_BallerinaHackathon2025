@@ -129,8 +129,15 @@ if (document.readyState === 'loading') {
 // Lightweight JS client for backend endpoints (no extra HTML needed)
 const apiBase = '';
 
+function authHeaders() {
+  try {
+    const token = localStorage.getItem('rp_token') || '';
+    return token ? { 'Authorization': 'Bearer ' + token } : {};
+  } catch (_) { return {}; }
+}
+
 async function httpGet(path) {
-  const res = await fetch(apiBase + path, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(apiBase + path, { headers: { 'Accept': 'application/json', ...authHeaders() } });
   if (!res.ok) throw new Error('GET ' + path + ' failed: ' + res.status);
   const ct = res.headers.get('content-type') || '';
   if (ct.includes('application/json')) return await res.json();
@@ -140,7 +147,7 @@ async function httpGet(path) {
 async function httpPost(path, body) {
   const res = await fetch(apiBase + path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', ...authHeaders() },
     body: JSON.stringify(body || {})
   });
   if (!res.ok) throw new Error('POST ' + path + ' failed: ' + res.status);
@@ -150,7 +157,7 @@ async function httpPost(path, body) {
 async function httpPut(path, body) {
   const res = await fetch(apiBase + path, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', ...authHeaders() },
     body: JSON.stringify(body || {})
   });
   if (!res.ok) throw new Error('PUT ' + path + ' failed: ' + res.status);
@@ -158,7 +165,7 @@ async function httpPut(path, body) {
 }
 
 async function httpDelete(path) {
-  const res = await fetch(apiBase + path, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+  const res = await fetch(apiBase + path, { method: 'DELETE', headers: { 'Accept': 'application/json', ...authHeaders() } });
   if (!res.ok) throw new Error('DELETE ' + path + ' failed: ' + res.status);
   return await res.json();
 }

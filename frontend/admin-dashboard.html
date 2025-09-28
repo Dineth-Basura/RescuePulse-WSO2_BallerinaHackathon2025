@@ -11,6 +11,14 @@
   <script defer src="/script.js"></script>
 </head>
 <body>
+  <script>
+    (function(){
+      try {
+        const role = (localStorage.getItem('rp_role')||'').toLowerCase();
+        if (role !== 'admin') { window.location.replace('user-dashboard.html'); }
+      } catch (_) { window.location.replace('sign-in.html'); }
+    })();
+  </script>
   <div class="min-h-screen p-6">
     <header class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">Admin Dashboard</h1>

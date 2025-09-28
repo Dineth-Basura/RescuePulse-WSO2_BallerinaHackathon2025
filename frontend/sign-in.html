@@ -180,9 +180,17 @@
                 .then(r => r.json())
                 .then(data => {
                     if (data.status === 'ok') {
-                        try { localStorage.setItem('rp_token', data.token || ''); } catch (e) {}
+                        try { 
+                            localStorage.setItem('rp_token', data.token || '');
+                            if (data.role) localStorage.setItem('rp_role', data.role);
+                            // derive username from token for convenience
+                            if (data.token && data.token.startsWith('demo-token-')) {
+                                localStorage.setItem('rp_user', data.token.replace('demo-token-',''));
+                            }
+                        } catch (e) {}
                         alert('Sign-in successful! Redirecting...');
-                        window.location.href = 'user-dashboard.html';
+                        const role = (localStorage.getItem('rp_role')||'user').toLowerCase();
+                        window.location.href = role === 'admin' ? 'admin-dashboard.html' : 'user-dashboard.html';
                     } else {
                         alert('Sign-in failed: ' + (data.message || 'unknown error'));
                     }

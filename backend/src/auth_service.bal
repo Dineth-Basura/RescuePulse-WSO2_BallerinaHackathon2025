@@ -17,12 +17,14 @@ type AuthResponse record {
     string status;
     string message?;
     string token?;
+    string role?;
 };
 
 type User record {
     string username;
     string password;
     string createdAt?;
+    string role;
 };
 
 final string LOG_DIR = "logs";
@@ -50,8 +52,9 @@ service /auth on httpListener {
         if users.hasKey(req.username) {
             return { status: "error", message: "user exists" };
         }
-        users[uname] = { username: uname, password: pword, createdAt: "" };
-        if persistUser(uname, pword) is error {
+        string role = uname == "admin" ? "admin" : "user";
+        users[uname] = { username: uname, password: pword, createdAt: "", role: role };
+        if persistUser(uname, pword, role) is error {
             // ignore persist error
         }
         log:printInfo("[signup] user=" + uname);
@@ -79,7 +82,10 @@ service /auth on httpListener {
         if appendLogLine(LOGIN_LOG_PATH, line) is error {}
         if success {
             log:printInfo("[login] SUCCESS user=" + uname);
-            return { status: "ok", token: "demo-token-" + uname };
+            string role = "user";
+            var mu = users[uname];
+            if mu is User { role = mu.role; }
+            return { status: "ok", token: "demo-token-" + uname, role: role };
         }
         log:printInfo("[login] FAIL user=" + uname + " reason=" + message);
         return { status: "error", message };
@@ -115,9 +121,9 @@ function appendLogLine(string path, string line) returns error? {
     check io:fileWriteString(path, content);
 }
 
-function persistUser(string username, string password) returns error? {
-    // Append user to users.txt as TSV
-    string line = username + "\t" + password;
+function persistUser(string username, string password, string role) returns error? {
+    // Append user to users.txt as TSV: username \t password \t role
+    string line = username + "\t" + password + "\t" + role;
     string content = "";
     var r = io:fileReadString(USERS_PATH);
     if r is string { content = r; }
@@ -135,11 +141,14 @@ function loadUsersFromFile() returns error? {
         foreach var ln in lines {
             if ln.length() == 0 { continue; }
             string[] parts = splitByDelimiter(ln, "\t");
-            if parts.length() >= 2 {
+                if parts.length() >= 2 {
                 string u = parts[0].trim();
                 string p = parts[1].trim();
-                if u.length() > 0 {
-                    users[u] = { username: u, password: p, createdAt: "" };
+                    string role = "user";
+                    if parts.length() >= 3 { role = parts[2].trim(); }
+                    if role.length() == 0 { role = (u == "admin" ? "admin" : "user"); }
+                    if u.length() > 0 {
+                        users[u] = { username: u, password: p, createdAt: "", role: role };
                 }
             }
         }
